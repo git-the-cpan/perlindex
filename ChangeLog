@@ -1,3 +1,9 @@
+2004-05-02  Florian Ragwitz
+
+	* please parameterize the $IDIR in the make process
+	* clarified license
+	* clarified authorship of Text::English
+	
 2003-06-19  Slaven Rezic 
 
 	* t/basic.t: made test more safe and portable

@@ -1,26 +1,8 @@
-#!/usr/local/ls6/bin/perl
+#!/usr/bin/perl
 #                              -*- Mode: Perl -*- 
-# English.pm -- 
-# ITIID           : $ITI$ $Header $__Header$
-# Author          : Ulrich Pfeifer
-# Created On      : Thu Feb  1 13:47:58 1996
-# Last Modified By: Ulrich Pfeifer
-# Last Modified On: Thu Feb  1 13:52:38 1996
-# Language        : Perl
-# Update Count    : 4
-# Status          : Unknown, Use with caution!
-# 
-# (C) Copyright 1996, Universität Dortmund, all rights reserved.
-# 
-# $Locker:  $
-# $Log: English.pm,v $
-# Revision 1.1.1.1  2003/06/18 17:12:09  upf
-# perlindex-1.200.tar.gz
-#
-# Revision 1.1.1.1  1996/02/22 15:43:31  pfeifer
-# patch2:
-#
-# 
+# Author          : Ian Phillipps
+# Last Modified On: Sun May  2 15:35:33 2004
+# Language        : CPerl
 
 package Text::English;
 

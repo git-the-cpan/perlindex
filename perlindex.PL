@@ -32,17 +32,16 @@ $Config{'startperl'}
 !GROK!THIS!
 print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
-# $Basename: perlindex.PL $
-# $Revision: 1.4 $
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified By: Ulrich Pfeifer
-# Last Modified On: Wed Jun 18 19:43:36 2003
+# Last Modified On: Sun May  2 15:46:21 2004
 # Language        : Perl
-# Update Count    : 302
+# Update Count    : 305
 # Status          : Unknown, Use with caution!
 # 
-# (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
+# (C) Copyright 1996-2004, Ulrich Pfeifer, all rights reserved.
+# This file is free software; you can redistribute it and/or modify it
+# under the same terms as Perl itself.
 # 
 # 
 # %SEEN is used to store the absolute pathes to files which have been
@@ -90,11 +89,17 @@ $pager= $Config{'pager'};
 if ($Config{'osname'} eq 'hpux') {
   $pager= "col | $pager";
 }
+
+$index_dir = $Config{'man1direxp'};
+$index_dir =~ s:/[^/]*$::;
+$index_dir = $ENV{'INDEXDIR'} if $ENV{'INDEXDIR'};
+
 print OUT <<"EOC";
 \$nroff      = \'$Config{'nroff'}\';
 \$man1direxp = \'$Config{'man1direxp'}\';
 \$man3direxp = \'$Config{'man3direxp'}\';
 \@perllib    = \'$Config{'installprivlib'}\';
+\$IDIR       = \'$index_dir\';
 EOC
 if (index($Config{'installsitelib'}, $Config{'installprivlib'}) != 0) {
     print OUT <<"EOC";
@@ -139,9 +144,6 @@ if (eval 'require Term::ReadKey') {
 print OUT <<'!NO!SUBS!';
 
 $stemmer = \&Text::English::stem;
-# directory for the index 
-$IDIR = $man1direxp;
-$IDIR =~ s:/[^/]*$::;
 
 $opt_index   = '';                # make perl -w happy
 $opt_menu    = 1;
@@ -187,7 +189,7 @@ if ($opt_index) {
     }
     for $name (@ARGV) {
         my $fns = $name;
-        $fns =~ s:$prefix/::;
+        $fns =~ s:\Q$prefix/::;
         next if $SEEN{$fns};
         next unless -f $name;
         if ($name !~ /(~|,v)$/) {
@@ -228,7 +230,7 @@ sub wanted {
     if ($name eq $man3direxp) {
         $prune = 1;
     }
-    $fns =~ s:$prefix/::;
+    $fns =~ s:\Q$prefix/::;
     return if $SEEN{$fns};
     return unless -f $_;
     if ($name =~ /man|bin|\.(pod|pm)$/) {
