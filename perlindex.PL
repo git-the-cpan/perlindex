@@ -34,12 +34,12 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun May  2 15:46:21 2004
+# Last Modified On: Sun Apr  3 13:17:11 2005
 # Language        : Perl
-# Update Count    : 305
+# Update Count    : 314
 # Status          : Unknown, Use with caution!
 # 
-# (C) Copyright 1996-2004, Ulrich Pfeifer, all rights reserved.
+# (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
 # This file is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 # 
@@ -64,6 +64,7 @@ use less 'time';
 use Getopt::Long;
 use File::Basename;
 use Text::English;
+use Config;
 
 # NDBM_File as LAST resort
 package AnyDBM_File;
@@ -85,11 +86,6 @@ if ($x eq "\001") {
     print OUT "\$p          = 'S'; # change to 'I' for large collections\n";  
 }
 
-$pager= $Config{'pager'};
-if ($Config{'osname'} eq 'hpux') {
-  $pager= "col | $pager";
-}
-
 $index_dir = $Config{'man1direxp'};
 $index_dir =~ s:/[^/]*$::;
 $index_dir = $ENV{'INDEXDIR'} if $ENV{'INDEXDIR'};
@@ -98,22 +94,8 @@ print OUT <<"EOC";
 \$nroff      = \'$Config{'nroff'}\';
 \$man1direxp = \'$Config{'man1direxp'}\';
 \$man3direxp = \'$Config{'man3direxp'}\';
-\@perllib    = \'$Config{'installprivlib'}\';
 \$IDIR       = \'$index_dir\';
-EOC
-if (index($Config{'installsitelib'}, $Config{'installprivlib'}) != 0) {
-    print OUT <<"EOC";
-push \@perllib,\'$Config{'installsitelib'}\';
-EOC
-}
-if ($Config{'installvendorlib'} && index($Config{'installvendorlib'}, $Config{'installprivlib'}) != 0) {
-    print OUT <<"EOC";
-push \@perllib,\'$Config{'installvendorlib'}\';
-EOC
-}
-print OUT <<"EOC";
 \$prefix     = \'$Config{'prefix'}\';
-\$pager      = \'$pager\';
 EOC
 ;
 
@@ -143,6 +125,13 @@ if (eval 'require Term::ReadKey') {
 
 print OUT <<'!NO!SUBS!';
 
+$pager= $Config{'pager'};
+if ($Config{'osname'} eq 'hpux') {
+  $pager= "col | $pager";
+}
+if (exists $ENV{PAGER}) {
+  $pager=$ENV{PAGER}
+}
 $stemmer = \&Text::English::stem;
 
 $opt_index   = '';                # make perl -w happy
@@ -182,8 +171,16 @@ if ($opt_index) {
     require "find.pl";
 
     unless (@ARGV) {            # breaks compatibility :-(
+        my %seen;
+        my @perllib = grep(length && -d && !$seen{$_}++,
+            @Config{qw(installprivlib installarchlib installsitelib installvendorlib installscript installsitearch)});
+
         for $dir (@perllib) {
             print "Scanning $dir ... \n";
+            if (-l $dir) { # debian symlinks installarchlib but we do not want to follow links in general
+               my $target = readlink $dir;
+               $dir =~ s:[^/]+$:$target:;
+            }
             &find($dir);
         }
     }

@@ -3,6 +3,5 @@ MANIFEST
 README
 Makefile.PL
 perlindex.PL
-lib/Text/English.pm
 t/basic.t
 META.yml                                 Module meta-data (added by MakeMaker)

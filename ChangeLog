@@ -1,3 +1,8 @@
+2005-04-03  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* Removed Text::English from Distribution
+	* Determine pager and search path at run time (Patch from Marek, Ticket #4506)
+
 2004-05-02  Florian Ragwitz
 
 	* please parameterize the $IDIR in the make process
@@ -8,7 +13,7 @@
 
 	* t/basic.t: made test more safe and portable
 
-2003-06-18  Ulrich Pfeifer  <upf@de.uu.net>
+2003-06-18  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	Added some regression tests before the CPAN testers beat me up.
 
