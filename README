@@ -4,7 +4,7 @@ Perlindex is a program to index and search the perl documentation.
 
 The newest version is always available from CPAN/authors/id/ULPFR.
 
-Pelrindex should work with any Perl >= 5.002 at least. With Perl >=
+Perlindex should work with any Perl >= 5.002 at least. With Perl >=
 5.003_07 it will use compress integers which results in smaller
 indices.
 
@@ -19,4 +19,4 @@ recommend to specify the perl utils (perldoc, h2xs, ...):
 
         perlindex -index /usr/local/ls6/perl-5.002/bin/*
 
-Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+Ulrich Pfeifer

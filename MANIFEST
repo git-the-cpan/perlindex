@@ -4,3 +4,4 @@ README
 Makefile.PL
 perlindex.PL
 lib/Text/English.pm
+t/basic.t

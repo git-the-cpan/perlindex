@@ -33,13 +33,13 @@ $Config{'startperl'}
 print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # $Basename: perlindex.PL $
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Tue May 27 17:38:23 1997
+# Last Modified On: Wed Jun 18 19:43:36 2003
 # Language        : Perl
-# Update Count    : 296
+# Update Count    : 302
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
@@ -90,15 +90,27 @@ $pager= $Config{'pager'};
 if ($Config{'osname'} eq 'hpux') {
   $pager= "col | $pager";
 }
-print OUT <<"EOC"
+print OUT <<"EOC";
 \$nroff      = \'$Config{'nroff'}\';
 \$man1direxp = \'$Config{'man1direxp'}\';
 \$man3direxp = \'$Config{'man3direxp'}\';
-\$privlibexp = \'$Config{'privlibexp'}\';
+\@perllib    = \'$Config{'installprivlib'}\';
+EOC
+if (index($Config{'installsitelib'}, $Config{'installprivlib'}) != 0) {
+    print OUT <<"EOC";
+push \@perllib,\'$Config{'installsitelib'}\';
+EOC
+}
+if ($Config{'installvendorlib'} && index($Config{'installvendorlib'}, $Config{'installprivlib'}) != 0) {
+    print OUT <<"EOC";
+push \@perllib,\'$Config{'installvendorlib'}\';
+EOC
+}
+print OUT <<"EOC";
 \$prefix     = \'$Config{'prefix'}\';
 \$pager      = \'$pager\';
 EOC
-;   
+;
 
 # Use Term::ReadKey for character-at-a-time input if available.
 # Else use "stty cbreak" if BSD, "stty icanon" if non-BSD.
@@ -142,7 +154,12 @@ $opt_cbreak  = 1;
             'menu!',
             'verbose',
             'dict:i',
+            'idir=s',
             ) || die "Usage: $0 [-index] [words ...]\n";
+
+if (defined $opt_idir) {
+    $IDIR = $opt_idir;          # avoid to many changes below.
+}
 
 if (defined $opt_dict) {
     $opt_dict ||= 100;
@@ -161,9 +178,12 @@ if ($opt_index) {
         or die "Could not tie $IDIR/index_fn: $!\n";
 
     require "find.pl";
-    for $dir ($privlibexp) {
-        print "Scanning $dir ... \n";
-        &find($dir);
+
+    unless (@ARGV) {            # breaks compatibility :-(
+        for $dir (@perllib) {
+            print "Scanning $dir ... \n";
+            &find($dir);
+        }
     }
     for $name (@ARGV) {
         my $fns = $name;
@@ -394,8 +414,9 @@ sub initstop {
     return if $stopinited++;
     while (<DATA>) {
         next if /^\#/;
-        chomp;
-        $stop{$_}++;
+        for (normalize($_)) {
+          $stop{$_}++;
+        }
     }
 }
 

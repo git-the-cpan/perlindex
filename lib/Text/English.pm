@@ -12,8 +12,11 @@
 # 
 # (C) Copyright 1996, Universität Dortmund, all rights reserved.
 # 
-# $Locker: pfeifer $
+# $Locker:  $
 # $Log: English.pm,v $
+# Revision 1.1.1.1  2003/06/18 17:12:09  upf
+# perlindex-1.200.tar.gz
+#
 # Revision 1.1.1.1  1996/02/22 15:43:31  pfeifer
 # patch2:
 #
