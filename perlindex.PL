@@ -32,50 +32,18 @@ $Config{'startperl'}
 !GROK!THIS!
 print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
-# perlindex -- 
-# ITIID           : $ITI$ $Header $__Header$
+# $Basename: perlindex.PL $
+# $Revision: 1.3 $
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Sun Mar 10 13:04:38 1996
+# Last Modified On: Tue May 27 17:38:23 1997
 # Language        : Perl
-# Update Count    : 295
+# Update Count    : 296
 # Status          : Unknown, Use with caution!
 # 
-# (C) Copyright 1996, Universität Dortmund, all rights reserved.
+# (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
 # 
-# $Locker: pfeifer $
-# $Log: perlindex.PL,v $
-# Revision 1.1.1.7  1996/03/10 12:05:35  pfeifer
-# patch7: Fixed test for compressed int patch.
-#
-# Revision 1.1.1.6  1996/03/08 19:26:07  pfeifer
-# patch6: cbreak for non bsd systems (hopefully).
-#
-# Revision 1.1.1.5  1996/03/08 19:07:51  pfeifer
-# patch6: man3direxp will not be indexed any more. Even if inside of
-# patch6: privlibexp. Fixed bug with -nomenu. Did eat characters ;-)
-#
-# Revision 1.1.1.4  1996/02/28 12:44:50  pfeifer
-# patch5: Nroff, man1direxp, privlibexp, prefix and pager are now
-# patch5: determined at extraction time. Nroff and pager were hardcoded
-# patch5: before.
-#
-# Revision 1.1.1.3  1996/02/23 10:21:37  pfeifer
-# patch4: Fixed menu numbering. First hit could not be selected before.
-#
-# Revision 1.1.1.2  1996/02/22 18:17:33  pfeifer
-# patch3: Added cbreak mode.
-#
-# Revision 1.1.1.1  1996/02/22 15:43:24  pfeifer
-# patch2:
-#
-# Revision 1.2  1996/01/23 08:55:30  pfeifer
-# Will move to AnyDBM_File now.
-#
-# Revision 1.1  1996/01/22 13:35:21  pfeifer
-# Initial revision
-#
 # 
 # %SEEN is used to store the absolute pathes to files which have been
 #       indexed. Probably this could be replaced by %FN.
@@ -117,20 +85,32 @@ if ($x eq "\001") {
 } else {
     print OUT "\$p          = 'S'; # change to 'I' for large collections\n";  
 }
+
+$pager= $Config{'pager'};
+if ($Config{'osname'} eq 'hpux') {
+  $pager= "col | $pager";
+}
 print OUT <<"EOC"
 \$nroff      = \'$Config{'nroff'}\';
 \$man1direxp = \'$Config{'man1direxp'}\';
 \$man3direxp = \'$Config{'man3direxp'}\';
 \$privlibexp = \'$Config{'privlibexp'}\';
 \$prefix     = \'$Config{'prefix'}\';
-\$pager      = \'$Config{'pager'}\';
+\$pager      = \'$pager\';
 EOC
 ;   
-if ($Config{'d_bsd'}) {
-    print OUT '$BSD_STYLE  = 1;'."\n";
+
+# Use Term::ReadKey for character-at-a-time input if available.
+# Else use "stty cbreak" if BSD, "stty icanon" if non-BSD.
+if (eval 'require Term::ReadKey') {
+  print OUT "use Term::ReadKey;\n";
+  $BSD_STYLE= -1;
+} elsif ($Config{'d_bsd'}) {
+  $BSD_STYLE= 1;
 } else {
-    print OUT '$BSD_STYLE  = 0;'."\n";
+  $BSD_STYLE= 0;
 }
+
 # # Let's look for a stemmer
 # eval "use Text::English;";
 # unless ($@) {
@@ -383,23 +363,31 @@ sub cbreak {
         $| = 1;
         select(STDOUT);
         $SIG{'QUIT'} = $SIG{'INT'} = 'cbreak';
-        if ($BSD_STYLE) {
-            system "stty cbreak </dev/tty >/dev/tty 2>&1";
-        }
-        else {
-            system "stty", '-icanon', 'eol', "\001";
-        }
-        #system "stty cbreak echo </dev/tty >/dev/tty 2>&1";
+!NO!SUBS!
+;
+
+if ($BSD_STYLE == -1) {
+    print OUT "\tReadMode 3; # Set cbreak mode\n";
+} elsif ($BSD_STYLE) {
+    print OUT "\tsystem \"stty cbreak </dev/tty >/dev/tty 2>&1\";\n";
+    #print OUT "\tsystem \"stty cbreak echo </dev/tty >/dev/tty 2>&1\";\n";
+} else {
+    print OUT "\tsystem \"stty\", '-icanon', 'eol', \"\\001\";\n";
+}
+print OUT "    } else {\n";
+if ($BSD_STYLE == -1) {
+    print OUT "\tReadMode 0; # Restore non-cbreak mode\n";
+} elsif ($BSD_STYLE) {
+    print OUT "\tsystem \"stty -cbreak </dev/tty >/dev/tty 2>&1\";\n";
+    #print OUT "\tsystem \"stty -cbreak echo </dev/tty >/dev/tty 2>&1\";\n";
     } else {
-        if ($BSD_STYLE) {
-            system "stty -cbreak </dev/tty >/dev/tty 2>&1";
+    print OUT "\tsystem \"stty\", 'icanon', 'eol', '^\@'; # ascii null\n";
         }
-        else {
-            system "stty", 'icanon', 'eol', '^@'; # ascii null
-        }
-        #system "stty -cbreak echo </dev/tty >/dev/tty 2>&1";
+
+print OUT <<'!NO!SUBS!';
     }
 }
+
 
 $stopinited = 0;                # perl -w
 sub initstop {

@@ -1,24 +1,33 @@
+#!/app/unido-i06/magic/perl
+#                              -*- Mode: Perl -*- 
+# $Basename: Makefile.PL $
+# $Revision: 1.4 $
+# Author          : Ulrich Pfeifer
+# Created On      : Tue May 27 17:27:28 1997
+# Last Modified By: Ulrich Pfeifer
+# Last Modified On: Tue May 27 18:58:55 1997
+# Language        : CPerl
+# Update Count    : 13
+# Status          : Unknown, Use with caution!
+# 
+# (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
+# 
+# 
+
+# $Format: "\$VERSION = \"$ReleaseVersion$\";"$
+$VERSION = "1.200";
+
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
-open(PATCH, "./patchlevel.h") || die "Could not open patchlevel.h: $!";
-while (<PATCH>) {
-    if (/VERSION ([\d.]+)/) {
-        $version = $1;
-    }
-    if (/PATCHLEVEL (\d+)/) {
-        $revision = $1;
-    }                       # 
-}
-close(PATCH);
+
 WriteMakefile(
-    'NAME'	   => 'perlindex',
-    'VERSION'	   => sprintf("%5.3f", $version + $revision/1000),
-    'LIBS'	   => [''],   # e.g., '-lm' 
-    'DEFINE'	   => '',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	   => '',     # e.g., '-I/usr/include/other' 
+    'NAME'         => 'perlindex',
+    'VERSION'      => $VERSION,
+    'LIBS'         => [''],   # e.g., '-lm' 
+    'DEFINE'       => '',     # e.g., '-DHAVE_SOMETHING' 
+    'INC'          => '',     # e.g., '-I/usr/include/other' 
     'dist'         => { SUFFIX => "gz", COMPRESS => "gzip -f"},
     'EXE_FILES'    => [ 'perlindex' ],
-#   'VERSION_FROM' => README,
-#   'PM'           => {'English.pm' => '$(INST_LIBDIR)/Text/English.pm'},
+     'clean'       => { 'FILES' => 'perlindex' },
 );

@@ -1,4 +1,20 @@
-Sun Mar 10 13:05:46 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+Sun Mar 10 13:05:46 MET 1996   "Chuck D. Phillips (NON-HP Employee)" <cdp@hpescdp.fc.hp.com>
+
+By default, the program perlindex isn't deleted when you do a "make
+clean" the result is that the Config.pm constants don't get updated
+next time you do a "make all".  To fix this, you can add the following
+line to the WriteMakefile() parameters in Makefile.PL:
+
+	      'clean' =>	{ 'FILES' => 'perlindex' },
+
+
+Nit: Term::ReadKey is more reliable for cbreak than using $d_bsd.  On
+HPUX, setting BSD_Style to either 0 or 1 doesn't quite work right.
+I've hacked my own copy of perlindex.PL to prefer Term::ReadKey if
+available.  Otherwise, it defaults to old behavior execept that it
+resolves during "make all" instead of at run time.  (I also insert
+"col" between the nroff and the pager to avoid some garbage on HPUX.)
+I've included the diffs at the bottom.
 
 patch7 Description:
 

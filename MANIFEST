@@ -2,7 +2,5 @@ ChangeLog
 MANIFEST
 README
 Makefile.PL
-compressed_int_patch
 perlindex.PL
 lib/Text/English.pm
-patchlevel.h
