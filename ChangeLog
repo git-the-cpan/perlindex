@@ -1,0 +1,41 @@
+Sun Mar 10 13:05:46 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+patch7 Description:
+
+	Fixed test for compressed int patch.
+
+Fri Mar  8 20:26:27 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+patch6 Description:
+
+	man3direxp will not be indexed any more. Even if inside of
+	privlibexp. Fixed bug with -nomenu. Did eat characters ;-)
+	cbreak for non bsd systems (hopefully).
+
+Wed Feb 28 13:45:28 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+patch5 Description:
+
+	Nroff, man1direxp, privlibexp, prefix and pager are now
+	determined at extraction time. Nroff and pager were hardcoded
+	before.
+
+Fri Feb 23 11:22:12 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+. Description:
+
+	Fixed version computation.
+	Fixed menu numbering. First hit could not be selected before.
+        Added chmod 0755 to perlindex.PL
+Thu Feb 22 19:17:54 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+. Description:
+
+	New version numbering.
+	Added cbreak mode.
+
+Thu Feb 22 16:43:57 MET 1996   Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
+
+. Description:
+
+	

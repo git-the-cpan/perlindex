@@ -1,0 +1,21 @@
+This is the perlindex distribution 
+
+Perlindex is a program to index and search the perl documentation.
+
+The newest version is always available from CPAN/authors/id/ULPFR.
+
+You *may* apply the compressed_int_patch to your perl. This will save
+some index space.
+
+To  install do:
+
+        perl Makefile.PL
+        make install
+        perlindex -index
+
+You may give additional files to index on the command line. I'd
+recommend to specify the perl utils (perldoc, h2xs, ...):
+
+        perlindex -index /usr/local/ls6/perl-5.002/bin/*
+
+Ulrich Pfeifer <pfeifer@ls6.informatik.uni-dortmund.de>
