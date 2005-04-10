@@ -1,3 +1,8 @@
+2005-04-10  Ulrich Pfeifer  <upf@wait.de>
+
+	* Re-Added Text::English as it does not seem to be available
+	separately.  I'd rather not package a "foreign" separately.
+
 2005-04-03  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* Removed Text::English from Distribution

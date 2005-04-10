@@ -4,4 +4,5 @@ README
 Makefile.PL
 perlindex.PL
 t/basic.t
+lib/Text/English.pm
 META.yml                                 Module meta-data (added by MakeMaker)
