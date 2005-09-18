@@ -1,3 +1,10 @@
+2005-09-18  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* Integrated a patch from Marek Rouchal to use Pod::Text for
+	parsing if available.  I did rework the patch a little to remove
+	the need for IO::Scalar which does no seem to be part of debian
+	sarge.  Now underscore is also a valid letter.
+
 2005-04-10  Ulrich Pfeifer  <upf@wait.de>
 
 	* Re-Added Text::English as it does not seem to be available

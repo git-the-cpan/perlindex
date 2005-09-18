@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun Apr  3 13:17:11 2005
+# Last Modified On: Sun Sep 18 18:47:45 2005
 # Language        : Perl
-# Update Count    : 314
+# Update Count    : 316
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -67,15 +67,8 @@ use Text::English;
 use Config;
 
 # NDBM_File as LAST resort
-package AnyDBM_File;
-
-@ISA = qw(DB_File GDBM_File SDBM_File ODBM_File NDBM_File) unless @ISA;
-
-for $mod (@ISA) {
-    last if eval "require $mod"
-}
-
-package main;
+BEGIN { @AnyDBM_File::ISA = qw(DB_File GDBM_File SDBM_File ODBM_File NDBM_File) }
+use AnyDBM_File;
 
 !NO!SUBS!
 
@@ -158,6 +151,14 @@ if (defined $opt_dict) {
 
 if ($opt_index) {
     &initstop;
+
+    # check whether we can use Pod::Text to extract POD
+    my $PodText = 0;
+    eval {
+      require Pod::Text;
+      print "Using Pod::Text\n";
+      $PodText = 1;
+    };
 
     tie (%IF,   AnyDBM_File, "$IDIR/index_if",   O_CREAT|O_RDWR, 0644)
         or die "Could not tie $IDIR/index_if: $!\n";
@@ -246,19 +247,37 @@ sub index {
     my $maxtf = 0;
     my $pod = ($fns =~ /\.pod|man/);
 
-    open(IN, "<$fn") || warn "Could not open $fn: $!\n", return (0);
-    while ($line = <IN>) {
-        if ($line =~ /^=head/) {
-            $pod = 1;
-        } elsif ($line =~ /^=cut/){
-            $pod = 0;
-        } else {
-            next unless $pod;
-        }
-        for $word (&normalize($line)) {
+    if($PodText) {
+      my $result;
+      my $parser = Pod::Text->new(sentence => 0, width => 78);
+      my $tmpfile = "$IDIR/tmppod.txt";
+      $parser->parse_from_file($fn, $tmpfile);
+      open (IN, "<$tmpfile") || warn "Could not open $fn: $!\n", return (0);
+      while ($line = <IN>) {
+        for $word (&normalize($result)) {
             next if $stop{$word};
             $tf{$word}++;
         }
+      }
+      close IN;
+      unlink $tmpfile;
+    } else {
+      # no Pod::Text found
+      open(IN, "<$fn") || warn "Could not open $fn: $!\n", return (0);
+      while ($line = <IN>) {
+          if ($line =~ /^=head/) {
+              $pod = 1;
+          } elsif ($line =~ /^=cut/){
+              $pod = 0;
+          } else {
+              next unless $pod;
+          }
+          for $word (&normalize($line)) {
+              next if $stop{$word};
+              $tf{$word}++;
+          }
+      }
+      close(IN);
     }
     for $tf (values %tf) {
         $maxtf = $tf if $tf > $maxtf;
@@ -268,7 +287,6 @@ sub index {
         $IF{$word} = '' unless defined $IF{$word}; # perl -w
         $IF{$word} .= pack($p.$p, $did, $tf{$word});
     }
-    close(IN);
     $FN{$did} = pack($p, $maxtf).$fns; 
     print STDERR "$fns\n";
     1;
@@ -279,8 +297,8 @@ sub normalize {
     my @result;
 
     $line =~ tr/A-Z/a-z/;
-    $line =~ tr/a-z0-9/ /cs;
-    for $word (split ' ', $line ) {
+    $line =~ tr/a-z0-9_/ /cs;
+    for $word (split / /, $line ) {
         $word =~ s/^\d+//;
         next unless length($word) > 2;
         if ($stemmer) {
