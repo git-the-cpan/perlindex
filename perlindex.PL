@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun Sep 18 18:47:45 2005
+# Last Modified On: Sun Mar 19 08:58:53 2006
 # Language        : Perl
-# Update Count    : 316
+# Update Count    : 319
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -84,7 +84,7 @@ $index_dir =~ s:/[^/]*$::;
 $index_dir = $ENV{'INDEXDIR'} if $ENV{'INDEXDIR'};
 
 print OUT <<"EOC";
-\$nroff      = \'$Config{'nroff'}\';
+\$nroff      = \'$Config{'nroff'}\' || \'nroff\';
 \$man1direxp = \'$Config{'man1direxp'}\';
 \$man3direxp = \'$Config{'man3direxp'}\';
 \$IDIR       = \'$index_dir\';
@@ -372,7 +372,7 @@ sub search {
                     system 'man', $sect, $page;
                 } else {
                     my ($path) = ($selection =~ m:(\S+)$:);
-                    $path = $prefix.'/'.$path;
+                    $path = $prefix.'/'.$path unless $path =~ m:^/:;
                     print STDERR "Running pod2man $path\n";
                     system "pod2man --official $path | $nroff -man | $pager";
                 }
