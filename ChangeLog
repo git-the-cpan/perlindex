@@ -1,3 +1,11 @@
+2006-07-02  Ulrich Pfeifer  <upf@de.uu.net>
+
+	* perlindex.PL (index): moving the check for Pod::Text in the
+	index function.  The result went out of scope before (thanks
+	Florian for the bug report).  Fixing the loop variable in the main
+	loop (thanks Florian for the bug report).  Adding support for
+	IO::Scalar.
+	
 2006-03-19  Ulrich Pfeifer  <upf@de.uu.net>
 
 	* Fixed a bug reported by Florian Ragwitz:  Absolute filenames

@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun Mar 19 08:58:53 2006
+# Last Modified On: Sun Jul  2 10:39:22 2006
 # Language        : Perl
-# Update Count    : 319
+# Update Count    : 349
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -126,7 +126,7 @@ if (exists $ENV{PAGER}) {
   $pager=$ENV{PAGER}
 }
 $stemmer = \&Text::English::stem;
-
+$debug       = 0;
 $opt_index   = '';                # make perl -w happy
 $opt_menu    = 1;
 $opt_maxhits = 15;
@@ -150,15 +150,24 @@ if (defined $opt_dict) {
 }
 
 if ($opt_index) {
-    &initstop;
 
     # check whether we can use Pod::Text to extract POD
-    my $PodText = 0;
+    $PodText     = 0;
     eval {
       require Pod::Text;
       print "Using Pod::Text\n";
       $PodText = 1;
     };
+
+
+    $IoScalar    = 0;
+    eval {
+      require IO::Scalar;
+      print "Using IO::Scalar\n";
+      $IoScalar = 1;
+    };
+
+    &initstop;
 
     tie (%IF,   AnyDBM_File, "$IDIR/index_if",   O_CREAT|O_RDWR, 0644)
         or die "Could not tie $IDIR/index_if: $!\n";
@@ -247,24 +256,42 @@ sub index {
     my $maxtf = 0;
     my $pod = ($fns =~ /\.pod|man/);
 
-    if($PodText) {
+    if($PodText and -T $fn) {
       my $result;
       my $parser = Pod::Text->new(sentence => 0, width => 78);
-      my $tmpfile = "$IDIR/tmppod.txt";
-      $parser->parse_from_file($fn, $tmpfile);
-      open (IN, "<$tmpfile") || warn "Could not open $fn: $!\n", return (0);
-      while ($line = <IN>) {
-        for $word (&normalize($result)) {
-            next if $stop{$word};
-            $tf{$word}++;
+      if ($IoScalar) {
+        my $tmpfile = new IO::Scalar;
+        open(IN,"<$fn");
+        $parser->parse_from_filehandle(*IN, $tmpfile);
+        warn "===> $fn, $tmpfile" if $debug;
+        #for my $line (split /\n/, $tmpfile) {
+        while ($tmpfile =~ s/^(.*\n)//) {
+          warn "=> $1\n" if $debug;
+          for $word (&normalize($1)) {
+              next if $stop{$word};
+              $tf{$word}++;
+          }
         }
+        close IN;
+      } else {
+        my $tmpfile = "$IDIR/tmppod.txt";
+        $parser->parse_from_file($fn, $tmpfile);
+        open (IN, "<$tmpfile") || warn "Could not open $fn: $!\n", return (0);
+        while ($line = <IN>) {
+          warn "=> $line\n" if $debug;
+          for $word (&normalize($line)) {
+              next if $stop{$word};
+              $tf{$word}++;
+          }
+        }
+        close IN;
+        unlink $tmpfile;
       }
-      close IN;
-      unlink $tmpfile;
     } else {
       # no Pod::Text found
       open(IN, "<$fn") || warn "Could not open $fn: $!\n", return (0);
       while ($line = <IN>) {
+          warn "=> $line\n" if $debug;
           if ($line =~ /^=head/) {
               $pod = 1;
           } elsif ($line =~ /^=cut/){
