@@ -1,3 +1,9 @@
+2008-10-19  Ulrich Pfeifer  <Ulrich.Pfeifer@VerizonBusiness.com>
+
+	* perlindex.PL: Fixed the indexing of the default directories
+	(code duplication needs to be removed) and added checking for
+	removed files (http://rt.cpan.org/Ticket/Display.html?id=39863).
+
 2008-10-19  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* perlindex.PL: Added support for updating documents as requested

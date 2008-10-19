@@ -198,7 +198,7 @@ if ($opt_index) {
     for $name (@ARGV) {
         my $fns = $name;
         $fns =~ s:\Q$prefix/::;
-        if ($SEEN{$fns}) {
+        if (exists $SEEN{$fns}) {
           my ($mtime, $did) = unpack "$p$p", $SEEN{$fns};
           if ((stat $name)[9] > $mtime) {
             # mark document as deleted
@@ -219,7 +219,22 @@ if ($opt_index) {
             }
         }
     }
+    # Check if all (previuosly) indexed files are still available
+    # This may take some time.
+    warn "Validating index ...\n";
+    while (my ($fns, $value) = each %SEEN) {
+      my $path = $fns; $path = $prefix.'/'.$path unless $path =~ m:^/:;
+      unless (-f $path) {
+        my ($mtime, $did) = unpack "$p$p", $value;
+        # mark document as deleted
+        warn "Marking $did ($fns) as deleted\n";
+        delete $FN{$did};
+        delete $SEEN{$fns};
+        $gc_required++;
+      }
+    }
     if ($gc_required) {
+      warn "Garbadge collecting ...\n";
       # garbadge collection, this is awfully slow
       while (my ($word,$list) = each %IF) {
         my %post = unpack($p.'*',$list);
@@ -270,12 +285,28 @@ sub wanted {
         $prune = 1;
     }
     $fns =~ s:\Q$prefix/::;
-    return if $SEEN{$fns};
+
+    if (exists $SEEN{$fns}) {
+      my ($mtime, $did) = unpack "$p$p", $SEEN{$fns};
+      if ((stat $name)[9] > $mtime) {
+        # mark document as deleted
+        delete $FN{$did};
+        warn "Marking $did,$mtime ($name) as deleted\n";
+        $gc_required++;
+      } else {
+        # index up to date
+        return;
+      }
+    }
+
     return unless -f $_;
     if ($name =~ /man|bin|\.(pod|pm|txt)$/) {
         if (!/(~|,v)$/) {
             $did = $FN{'last'}++;
-            $SEEN{$fns} = &index($name, $fns, $did); 
+            if (&index($name, $fns, $did)) {
+                my ($mtime) = (stat $name)[9];
+                $SEEN{$fns} = pack "$p$p", (stat $name)[9], $did;
+            }
         }
     }
 }
