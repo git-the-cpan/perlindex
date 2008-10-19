@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun Jul  2 10:39:22 2006
+# Last Modified On: Thu Jul  6 21:19:28 2006
 # Language        : Perl
-# Update Count    : 349
+# Update Count    : 368
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -44,8 +44,8 @@ print OUT <<'!NO!SUBS!';
 # under the same terms as Perl itself.
 # 
 # 
-# %SEEN is used to store the absolute pathes to files which have been
-#       indexed. Probably this could be replaced by %FN.
+# %SEEN                is used to store the mtime and absolute pathes to
+#                      files which have been indexed.
 # 
 # %FN   $FN{'last'}    greatest documentid
 #       $FN{$did}      a pair of $mtf and $filename where $mtf is the
@@ -129,7 +129,7 @@ $stemmer = \&Text::English::stem;
 $debug       = 0;
 $opt_index   = '';                # make perl -w happy
 $opt_menu    = 1;
-$opt_maxhits = 15;
+$opt_maxhits = 20;
 $opt_cbreak  = 1;
 &GetOptions(
             'index',
@@ -194,15 +194,47 @@ if ($opt_index) {
             &find($dir);
         }
     }
+    my $gc_required = 0;
     for $name (@ARGV) {
         my $fns = $name;
         $fns =~ s:\Q$prefix/::;
-        next if $SEEN{$fns};
+        if ($SEEN{$fns}) {
+          my ($mtime, $did) = unpack "$p$p", $SEEN{$fns};
+          if ((stat $name)[9] > $mtime) {
+            # mark document as deleted
+            delete $FN{$did};
+            warn "Marking $did ($name) as deleted\n";
+            $gc_required++;
+          } else {
+            # index up to date
+            next;
+          }
+        }
         next unless -f $name;
         if ($name !~ /(~|,v)$/) {
             $did = $FN{'last'}++;
-            $SEEN{$fns} = &index($name, $fns, $did); 
+            if (&index($name, $fns, $did)) {
+              my ($mtime) = (stat $name)[9];
+              $SEEN{$fns} = pack "$p$p", (stat $name)[9], $did;
+            }
         }
+    }
+    if ($gc_required) {
+      # garbadge collection, this is awfully slow
+      while (my ($word,$list) = each %IF) {
+        my %post = unpack($p.'*',$list);
+
+        delete $IF{$word};
+        while (my ($did,$tf) = each %post) {
+          if (exists $FN{$did}) {
+            $IF{$word} = '' unless defined $IF{$word}; # perl -w
+            $IF{$word} .= pack($p.$p, $did, $tf{$word});
+          } else {
+            #warn "Delete $did from list for $word\n";
+            $IDF{$word}--;
+          }
+        }
+      }
     }
     untie %IF;
     untie %IDF;
@@ -240,7 +272,7 @@ sub wanted {
     $fns =~ s:\Q$prefix/::;
     return if $SEEN{$fns};
     return unless -f $_;
-    if ($name =~ /man|bin|\.(pod|pm)$/) {
+    if ($name =~ /man|bin|\.(pod|pm|txt)$/) {
         if (!/(~|,v)$/) {
             $did = $FN{'last'}++;
             $SEEN{$fns} = &index($name, $fns, $did); 
@@ -254,9 +286,18 @@ sub index {
     my $did = shift;
     my %tf;
     my $maxtf = 0;
-    my $pod = ($fns =~ /\.pod|man/);
 
-    if($PodText and -T $fn) {
+    if ($fn =~ /\.txt$/) {
+       open (IN, "<$fn") || warn "Could not open $fn: $!\n", return (0);
+       while ($line = <IN>) {
+         warn "=> $line\n" if $debug;
+         for $word (&normalize($line)) {
+             next if $stop{$word};
+             $tf{$word}++;
+         }
+       }
+       close IN;
+    } elsif($PodText and -T $fn) {
       my $result;
       my $parser = Pod::Text->new(sentence => 0, width => 78);
       if ($IoScalar) {
@@ -355,6 +396,8 @@ sub search {
         my %post = unpack($p.'*',$IF{$word});
         my $idf = log($FN{'last'}/$IDF{$word});
         for $did (keys %post) {
+            # skip deleted documents
+            next unless exists $FN{$did};
             my ($maxtf) = unpack($p, $FN{$did});
             $score{$did} = 0 unless defined $score{$did}; # perl -w 
             $score{$did} += $post{$did} / $maxtf * $idf;
@@ -391,15 +434,32 @@ sub search {
             last if $answer =~ /^q/i;
             $answer = ($s{substr($answer,0,1)})-1;
             if ($answer >= 0 and $answer <= $#menu) {
-                my $selection = $menu[$answer];
-                if ($selection =~ m:/man:) {
+                my $selection = $menu[$answer]; chomp($selection);
+                my ($no, $score, $path) = split ' ', $selection, 3;
+                $path = $prefix.'/'.$path unless $path =~ m:^/:;
+
+                if ($path =~ /\.txt$/) {
+                    my $pdf = $path; $pdf =~ s:pages/(\S+)_(\d+)\.txt$:$1.pdf:;
+                    my $page = $2+0;
+                    my $endp = $page+2;
+                    my $tmp  = "/tmp/perlinde$$.pdf";
+
+                    if (-f $pdf) {
+                       print  "pdftk A=$pdf cat $page-$endp output $tmp\n";
+                       system "pdftk", "A=".$pdf, 'cat', "$page-$endp", 'output', $tmp and
+                       system "pdftk", "A=".$pdf, 'cat', "$page-end",   'output', $tmp;
+                       system "acroread", $tmp;
+                       unlink $tmp;
+                    } else {
+                       print STDERR "$pager '$path'\n";
+                       system $pager, $path;
+                    }
+                } elsif ($selection =~ m:/man:) {
                     my ($page, $sect) = 
                         ($selection =~ m:([^/]*)\.(.{1,3})$:);
                     print STDERR "Running man $sect $page\n";
                     system 'man', $sect, $page;
                 } else {
-                    my ($path) = ($selection =~ m:(\S+)$:);
-                    $path = $prefix.'/'.$path unless $path =~ m:^/:;
                     print STDERR "Running pod2man $path\n";
                     system "pod2man --official $path | $nroff -man | $pager";
                 }

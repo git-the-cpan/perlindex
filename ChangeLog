@@ -1,3 +1,10 @@
+2008-10-19  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* perlindex.PL: Added support for updating documents as requested
+	by SREZIC in http://rt.cpan.org/Ticket/Display.html?id=39862.
+	Update is transparent - except for the time used in the garbage
+	collect phase.
+
 2006-07-02  Ulrich Pfeifer  <upf@de.uu.net>
 
 	* perlindex.PL (index): moving the check for Pod::Text in the
