@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun Oct 19 17:12:44 2008
+# Last Modified On: Sun Oct 19 18:10:35 2008
 # Language        : Perl
-# Update Count    : 381
+# Update Count    : 398
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -215,34 +215,39 @@ if ($opt_index) {
       }
     }
     if ($GC_REQUIRED) {
-      print STDERR "Garbadge collecting ";
+      print STDERR "Garbadge collecting\r";
       # garbadge collection, this is awfully slow
       my $progress = 0;
       my $words    = keys %IF;
-      my $chunk    = int($words / 100)+1;
+      my %if_new;
+      tie (%if_new,   AnyDBM_File, "$IDIR/index_if.new",   O_CREAT|O_RDWR, 0644)
+        or die "Could not tie $IDIR/index_if: $!\n";
       while (my ($word,$list) = each %IF) {
-        unless (++$progress % $chunk) {
-          unless (($progress % ($chunk*10))) {
-            print STDERR int($progress / $chunk)
-          } else {
-            print STDERR ".";
-          }
-        }
+        print STDERR "Garbadge collecting ".(++$progress)."/".$words."\r";
         my %post = unpack($p.'*',$list);
 
-        delete $IF{$word};
+        #delete $IF{$word};
         while (my ($did,$tf) = each %post) {
           if (exists $FN{$did}) {
-            $IF{$word} = '' unless defined $IF{$word}; # perl -w
-            $IF{$word} .= pack($p.$p, $did, $tf{$word});
+            $if_new{$word} = '' unless defined $if{$word}; # perl -w
+            $if_new{$word} .= pack($p.$p, $did, $tf);
           } else {
-            #warn "Delete $did from list for $word\n";
             $IDF{$word}--;
           }
         }
       }
+      untie %if_new;
+      untie %IF;
+      opendir(IDX, $IDIR) or die "Could not read dir '$IDIR': $!";
+      for $file (readdir DIR) {
+        my $old = $file;
+        if ($file =~ s/^index_if\.new/index_if/) {
+          rename "$IDIR/$old", "$IDIR/$file";
+        }
+      }
+      print STDERR "\rGarbadge collecting ... done";
     }
-    untie %IF;
+    untie %IF unless $GC_REQUIRED;
     untie %IDF;
     untie %FN;
     untie %SEEN;

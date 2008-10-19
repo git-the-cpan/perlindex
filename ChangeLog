@@ -1,5 +1,8 @@
 2008-10-19  Ulrich Pfeifer  <Ulrich.Pfeifer@VerizonBusiness.com>
 
+	* perlindex.PL: Garbage collect can not change the index while
+	scanning it.  Doing a copy now.
+
 	* perlindex.PL: Fixed $gc_required scoping error.  Removed code
 	duplication. Added progress indication for GC collect. 
 
