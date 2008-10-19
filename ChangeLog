@@ -1,5 +1,8 @@
 2008-10-19  Ulrich Pfeifer  <Ulrich.Pfeifer@VerizonBusiness.com>
 
+	* perlindex.PL: Fixed $gc_required scoping error.  Removed code
+	duplication. Added progress indication for GC collect. 
+
 	* perlindex.PL: Fixed the indexing of the default directories
 	(code duplication needs to be removed) and added checking for
 	removed files (http://rt.cpan.org/Ticket/Display.html?id=39863).

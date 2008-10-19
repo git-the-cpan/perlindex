@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Thu Jul  6 21:19:28 2006
+# Last Modified On: Sun Oct 19 17:12:44 2008
 # Language        : Perl
-# Update Count    : 368
+# Update Count    : 381
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -149,6 +149,8 @@ if (defined $opt_dict) {
     $opt_dict ||= 100;
 }
 
+my $GC_REQUIRED = 0; # garbadge collect required? Global variable.
+
 if ($opt_index) {
 
     # check whether we can use Pod::Text to extract POD
@@ -194,30 +196,9 @@ if ($opt_index) {
             &find($dir);
         }
     }
-    my $gc_required = 0;
+
     for $name (@ARGV) {
-        my $fns = $name;
-        $fns =~ s:\Q$prefix/::;
-        if (exists $SEEN{$fns}) {
-          my ($mtime, $did) = unpack "$p$p", $SEEN{$fns};
-          if ((stat $name)[9] > $mtime) {
-            # mark document as deleted
-            delete $FN{$did};
-            warn "Marking $did ($name) as deleted\n";
-            $gc_required++;
-          } else {
-            # index up to date
-            next;
-          }
-        }
-        next unless -f $name;
-        if ($name !~ /(~|,v)$/) {
-            $did = $FN{'last'}++;
-            if (&index($name, $fns, $did)) {
-              my ($mtime) = (stat $name)[9];
-              $SEEN{$fns} = pack "$p$p", (stat $name)[9], $did;
-            }
-        }
+      add_to_index($name);
     }
     # Check if all (previuosly) indexed files are still available
     # This may take some time.
@@ -227,16 +208,26 @@ if ($opt_index) {
       unless (-f $path) {
         my ($mtime, $did) = unpack "$p$p", $value;
         # mark document as deleted
-        warn "Marking $did ($fns) as deleted\n";
+        warn "Marking document $did ($fns) as deleted\n";
         delete $FN{$did};
         delete $SEEN{$fns};
-        $gc_required++;
+        $GC_REQUIRED++;
       }
     }
-    if ($gc_required) {
-      warn "Garbadge collecting ...\n";
+    if ($GC_REQUIRED) {
+      print STDERR "Garbadge collecting ";
       # garbadge collection, this is awfully slow
+      my $progress = 0;
+      my $words    = keys %IF;
+      my $chunk    = int($words / 100)+1;
       while (my ($word,$list) = each %IF) {
+        unless (++$progress % $chunk) {
+          unless (($progress % ($chunk*10))) {
+            print STDERR int($progress / $chunk)
+          } else {
+            print STDERR ".";
+          }
+        }
         my %post = unpack($p.'*',$list);
 
         delete $IF{$word};
@@ -284,30 +275,8 @@ sub wanted {
     if ($name eq $man3direxp) {
         $prune = 1;
     }
-    $fns =~ s:\Q$prefix/::;
-
-    if (exists $SEEN{$fns}) {
-      my ($mtime, $did) = unpack "$p$p", $SEEN{$fns};
-      if ((stat $name)[9] > $mtime) {
-        # mark document as deleted
-        delete $FN{$did};
-        warn "Marking $did,$mtime ($name) as deleted\n";
-        $gc_required++;
-      } else {
-        # index up to date
-        return;
-      }
-    }
-
-    return unless -f $_;
-    if ($name =~ /man|bin|\.(pod|pm|txt)$/) {
-        if (!/(~|,v)$/) {
-            $did = $FN{'last'}++;
-            if (&index($name, $fns, $did)) {
-                my ($mtime) = (stat $name)[9];
-                $SEEN{$fns} = pack "$p$p", (stat $name)[9], $did;
-            }
-        }
+    if (-f $_ and $name =~ /man|bin|\.(pod|pm|txt)$/) {
+      add_to_index($name);
     }
 }
 
@@ -389,6 +358,32 @@ sub index {
     $FN{$did} = pack($p, $maxtf).$fns; 
     print STDERR "$fns\n";
     1;
+}
+
+sub add_to_index {
+  my ($name) = @_;
+  my $fns = $name; $fns =~ s:\Q$prefix/::;
+
+  if (exists $SEEN{$fns}) {
+    my ($mtime, $did) = unpack "$p$p", $SEEN{$fns};
+    if ((stat $name)[9] > $mtime) {
+      # mark document as deleted
+      delete $FN{$did};
+      warn "Marking document $did ($name) as deleted\n";
+      $GC_REQUIRED++;
+    } else {
+      # index up to date
+      next;
+    }
+  }
+  next unless -f $name;
+  if ($name !~ /(~|,v)$/) {
+    $did = $FN{'last'}++;
+    if (&index($name, $fns, $did)) {
+      my ($mtime) = (stat $name)[9];
+      $SEEN{$fns} = pack "$p$p", (stat $name)[9], $did;
+    }
+  }
 }
 
 sub normalize {
