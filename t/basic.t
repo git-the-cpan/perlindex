@@ -5,7 +5,7 @@
 # Author          : Ulrich Pfeifer
 # Created On      : Wed Jun 18 19:44:37 2003
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Thu Jun 19 11:25:36 2003
+# Last Modified On: Tue Oct 21 10:29:42 2008
 # Language        : CPerl
 # 
 # (C) Copyright 2003, UUNET Deutschland GmbH, Germany
@@ -16,6 +16,7 @@ BEGIN {
     if (!eval {
 	require File::Temp;
 	require File::Spec;
+	require Cwd;
 	1;
     }) {
 	print "1..0 # SKIP: File::Temp and/or File::Spec not available, skipping tests\n";
@@ -37,10 +38,11 @@ sub run {
 }
 
 my $tmp = tempdir(CLEANUP => 1);
+my $cwd = Cwd::getcwd();
 
 ok(
    run(
-       "-Mblib ./perlindex -idir $tmp --index README MANIFEST perlindex.PL",
+       "-Mblib ./perlindex -idir $tmp --index $cwd/README $cwd/MANIFEST $cwd/perlindex.PL",
        sub { print "[[$_[0]]]\n"; $_[0] =~ /MANIFEST/ }
       )
   );

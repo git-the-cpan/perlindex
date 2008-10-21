@@ -2,15 +2,15 @@
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Tue May 27 17:27:28 1997
-# Last Modified On: Sun Oct 19 17:55:36 2008
+# Last Modified On: Tue Oct 21 10:29:56 2008
 # Language        : CPerl
-# Update Count    : 34
+# Update Count    : 35
 #
 # (C) Copyright 1997-2005, Ulrich Pfeifer, all rights reserved.  This
 # file is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
-$VERSION = "1.603";
+$VERSION = "1.604";
 
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
