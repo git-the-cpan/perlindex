@@ -1,3 +1,8 @@
+2008-11-17  Ulrich Pfeifer  <Ulrich.Pfeifer@VerizonBusiness.com>
+
+	* perlindex.PL: applied typo patch from Slaven Rezic
+	(http://rt.cpan.org/Ticket/Display.html?id=40890)
+
 2008-10-19  Ulrich Pfeifer  <Ulrich.Pfeifer@VerizonBusiness.com>
 
 	* perlindex.PL: Garbage collect can not change the index while

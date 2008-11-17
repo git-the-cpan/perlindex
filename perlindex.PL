@@ -149,7 +149,7 @@ if (defined $opt_dict) {
     $opt_dict ||= 100;
 }
 
-my $GC_REQUIRED = 0; # garbadge collect required? Global variable.
+my $GC_REQUIRED = 0; # garbage collect required? Global variable.
 
 if ($opt_index) {
 
@@ -215,15 +215,15 @@ if ($opt_index) {
       }
     }
     if ($GC_REQUIRED) {
-      print STDERR "Garbadge collecting\r";
-      # garbadge collection, this is awfully slow
+      print STDERR "Garbage collecting\r";
+      # garbage collection, this is awfully slow
       my $progress = 0;
       my $words    = keys %IF;
       my %if_new;
       tie (%if_new,   AnyDBM_File, "$IDIR/index_if.new",   O_CREAT|O_RDWR, 0644)
         or die "Could not tie $IDIR/index_if: $!\n";
       while (my ($word,$list) = each %IF) {
-        print STDERR "Garbadge collecting ".(++$progress)."/".$words."\r";
+        print STDERR "Garbage collecting ".(++$progress)."/".$words."\r";
         my %post = unpack($p.'*',$list);
 
         #delete $IF{$word};
@@ -245,7 +245,7 @@ if ($opt_index) {
           rename "$IDIR/$old", "$IDIR/$file";
         }
       }
-      print STDERR "\rGarbadge collecting ... done";
+      print STDERR "\rGarbage collecting ... done";
     }
     untie %IF unless $GC_REQUIRED;
     untie %IDF;
