@@ -10,7 +10,7 @@
 # file is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
-$VERSION = "1.605";
+$VERSION = "1.606";
 
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence

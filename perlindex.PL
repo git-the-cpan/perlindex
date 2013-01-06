@@ -34,9 +34,9 @@ print OUT <<'!NO!SUBS!';
 #                              -*- Mode: Perl -*- 
 # Author          : Ulrich Pfeifer
 # Created On      : Mon Jan 22 13:00:41 1996
-# Last Modified On: Sun Oct 19 18:10:35 2008
+# Last Modified On: Sun Jan  6 22:26:28 2013
 # Language        : Perl
-# Update Count    : 398
+# Update Count    : 399
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1996-2005, Ulrich Pfeifer, all rights reserved.
@@ -180,7 +180,7 @@ if ($opt_index) {
     tie (%FN,   AnyDBM_File, "$IDIR/index_fn",   O_CREAT|O_RDWR, 0644)
         or die "Could not tie $IDIR/index_fn: $!\n";
 
-    require "find.pl";
+    require File::Find;
 
     unless (@ARGV) {            # breaks compatibility :-(
         my %seen;
@@ -193,7 +193,7 @@ if ($opt_index) {
                my $target = readlink $dir;
                $dir =~ s:[^/]+$:$target:;
             }
-            &find($dir);
+            File::Find::find( \&wanted, $dir );
         }
     }
 
@@ -227,12 +227,12 @@ if ($opt_index) {
         my %post = unpack($p.'*',$list);
 
         #delete $IF{$word};
+	$IDF{$word} = 0;
         while (my ($did,$tf) = each %post) {
           if (exists $FN{$did}) {
             $if_new{$word} = '' unless defined $if{$word}; # perl -w
             $if_new{$word} .= pack($p.$p, $did, $tf);
-          } else {
-            $IDF{$word}--;
+            $IDF{$word}++;
           }
         }
       }
@@ -275,13 +275,13 @@ if ($opt_index) {
 }
 
 sub wanted {
-    my $fns = $name;
+    my $fns = $File::Find::name;
 
-    if ($name eq $man3direxp) {
-        $prune = 1;
+    if ($File::Find::name eq $man3direxp) {
+        $File::Find::prune = 1;
     }
-    if (-f $_ and $name =~ /man|bin|\.(pod|pm|txt)$/) {
-      add_to_index($name);
+    if (-f $_ and $File::Find::name =~ /man|bin|\.(pod|pm|txt)$/) {
+      add_to_index($File::Find::name);
     }
 }
 

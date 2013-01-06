@@ -1,3 +1,13 @@
+2013-01-06  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* Do not decrement IDF in GC code.  I am not sure why the previous
+	code could produce negative document frequencies.
+
+2011-01-30  Damyan Ivanov <dmn@debian.org>
+
+	* Description: Replace usage of 'find.pl' by File::Find
+	 find.pl is scheduled for removal from the perl core
+
 2008-11-17  Ulrich Pfeifer  <Ulrich.Pfeifer@VerizonBusiness.com>
 
 	* perlindex.PL: applied typo patch from Slaven Rezic
